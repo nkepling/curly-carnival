@@ -2,9 +2,22 @@ import gymnasium as gym
 from gymnasium import spaces
 import pygame
 import numpy as np
+import networkx as nx
 
 
-class GridWorldEnv(gym.Env):
+
+class Cell:
+    """
+    TODO: A cell class that records some attirbutes of our cells. 
+
+    ROOM type, 
+    .... 
+    """
+    pass
+
+
+
+class MyGridWorld(gym.Env):
 
     """
     This is boiler plate custom gridworld code taken from openAI gym tutorial 
@@ -22,6 +35,7 @@ class GridWorldEnv(gym.Env):
     def __init__(self, render_mode=None, size=5):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
+        self.G = None
 
         # Observations are dictionaries with the agent's and the target's location.
         # Each location is encoded as an element of {0, ..., `size`}^2, i.e. MultiDiscrete([size, size]).
@@ -60,6 +74,39 @@ class GridWorldEnv(gym.Env):
         self.window = None
         self.clock = None
 
+    def _get_graph(self):
+        """
+        Return graph for A* search
+        
+        """
+        G = nx.Graph()
+        #mat = np.arange(self.size**2).reshape((self.size,self.size))
+        
+        ## Create undirectd graph of grid
+        for i in range(self.size):
+            for j in range(self.size):
+                #node = mat[i,j]
+                node = (i,j)
+                if i>0: 
+                    G.add_edge(node,(i-1,j))
+
+                if j>0:
+                    G.add_edge(node,(i,j-1))
+
+        #Add edge weights/attribtus to edges
+        nx.set_edge_attributes(G,{e:1 for e in G.edges()},"cost") # We can then set a random sub set of the edge weight to infty to create walls...
+
+        #TODO: Ask if its bettert to forbid the agent from corssing boundaries explicitly like this or if we shoudl do it wiht rewards... 
+                    
+        self.G = G
+        
+    def _add_walls(self):
+        """
+        Maybe add some walls in some random way
+        """
+        pass
+        
+
     def _get_obs(self):
         return {"agent": self._agent_location, "target": self._target_location}
 
@@ -90,11 +137,21 @@ class GridWorldEnv(gym.Env):
         if self.render_mode == "human":
             self._render_frame()
 
+        #Add graph here
+        self._get_graph()        
+
         return observation, info
 
-    def step(self, action):
-        # Map the action (element of {0,1,2,3}) to the direction we walk in
-        direction = self._action_to_direction[action]
+    def step(self, action, search="astar"):
+
+
+        ## If the searh method is astar we are passing indirection
+        if search=="astar":
+            direction = action
+        else:
+            # Map the action (element of {0,1,2,3}) to the direction we walk in
+            direction = self._action_to_direction[action]
+
         # We use `np.clip` to make sure we don't leave the grid
         self._agent_location = np.clip(
             self._agent_location + direction, 0, self.size - 1
