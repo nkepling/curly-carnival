@@ -32,7 +32,7 @@ class MyGridWorld(gym.Env):
     """
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, render_mode=None, size=5):
+    def __init__(self, render_mode=None, size=10):
         self.size = size  # The size of the square grid
         self.window_size = 512  # The size of the PyGame window
         self.G = None
@@ -165,7 +165,8 @@ class MyGridWorld(gym.Env):
         if self.render_mode == "human":
             self._render_frame()
 
-        return observation, reward, terminated, False, info
+        # return observation, reward, terminated, False, info
+        return observation,reward,terminated,info
 
     def render(self):
         if self.render_mode == "rgb_array":
