@@ -30,22 +30,25 @@ tgt = observation['target'] #ending location
 print(f"Agent start: {src}")
 print(f"Targt loc: {src}")
 
-# dist = lambda s,t : np.abs(t[0]-s[0]) + np.abs(t[1]-s[1]) 
+# actions = env.action_space
+
+dist = lambda s,t : np.abs(t[0]-s[0]) + np.abs(t[1]-s[1]) 
 # dirs = nx.astar_path(env.G, tgt,src, heuristic=dist, weight="cost")
-print(env.G)
-actions = a_star_search(src,tgt,env.G) #return path from taget to src to that we can pop from the end. 
+# print(env.G)
+# actions = a_star_search(src,tgt,env.G) #return path from taget to src to that we can pop from the end. 
 for _ in range(1000):
-    #action = env.action_space.sample() ## Search plocicy goes here 
-    if not actions:
-        actions = a_star_search(src,tgt,env.G)
-    else:
-        action = actions.pop(0)
+    action = env.action_space.sample() ## Search plocicy goes here 
+    # if not actions:
+    #     actions = a_star_search(src,tgt,env.G)
+    # else:
+    #     action = actions.pop(0)
 
     observation, reward, terminated, truncated, info  = env.step(action)
+    print(terminated)
 
     if terminated or truncated:
         observation, info = env.reset()
         src = observation['agent'] #staring location
         tgt = observation['target'] #ending location
-        actions =  a_star_search(src,tgt,env.G)
+        # actions =  a_star_search(src,tgt,env.G)
 env.close()

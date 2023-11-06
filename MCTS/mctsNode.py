@@ -13,7 +13,7 @@ class Node:
         else: self.state = defaultdict(dict,{k:v for k,v in zip(["obs","reward","terminated","info"],env)})
         self.action = action #what was the action taken to get here? The "incoming action"
         self.parent = parent #what is the parent node 
-        self.children = []
+        self.children = {} #children coresponding to the action taken ... 
         self.N = 0 #N this the number of time this node has been visited
         self.Q = [] # What is the curretn value of this node ... 
 

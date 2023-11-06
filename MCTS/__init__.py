@@ -1,6 +1,5 @@
-from envs.grid_world import GridWorldEnv
 from gymnasium.envs.registration import register
-from MCTS.mcts import MCTS
+
 
 register(
     id="MyGridWorld",
