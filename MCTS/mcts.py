@@ -19,7 +19,7 @@ class Node:
 
         self.action = action #what was the action taken to get here? The "incoming action"
         self.parent = parent #what is the parent node 
-        self.children = {} #children coresponding to the action taken ... 
+        self.children = {} #children coresponding to the action taken ... #BUG: list ?
         self.N = 0 #N this the number of time this node has been visited
         self.Q = 0 # What is the curretn value of this node ... initialized to zero. 
 
@@ -77,7 +77,7 @@ class MCTS:
 
     NOTE: This implemention will only support discrete action spaces. 
     """
-    def __init__(self,env:gym.Env,state,d,m,c) -> None:
+    def __init__(self,env:gym.Env,state,d,m,c,gamma) -> None:
         """
         INPUTS:
 
@@ -85,6 +85,7 @@ class MCTS:
         tuple state : state of environment (observation, reward,terminated,info)
         int m : number of iterations to run mcts
         float c : UTC search parameter. 
+        float gamma : discount factor
         """
         self.env = env # This is the current state of the mdp
         self.d = d # depth #TODO icorportae this into simulation depth
@@ -93,6 +94,7 @@ class MCTS:
         #self.U = U # value funciton estimate
         self.v0 = Node(parent=None,state=state,action=None)  #root node of search tree. 
         self.env = env
+        self.gamma = gamma        
 
     def search(self):
         """
@@ -104,8 +106,15 @@ class MCTS:
             vl = self._tree_policy(self.v0) #vl is the last node visitied by the tree search
             R = self._default_policy(vl)
             self._backpropagation(R,vl)
+            # if k == self.m//2:
+            #     print(vl.Q)
 
-        action_values = {k:(child.Q/child.N) for k,child in self.v0.children.items()}
+        # for k,child in self.v0.children.items():
+        #     print(f"Q:{child.Q}")
+        #     print(f"N : {child.N}")
+
+        action_values = {k:(child.Q/child.N) for k,child in self.v0.children.items()} #BUG? could be unpackign weird
+        print(action_values)
         best_action = max(action_values,key=action_values.get)
         return best_action
 
@@ -132,11 +141,16 @@ class MCTS:
         
         tot_reward = 0
         terminated = False
-
-        while not terminated:
+        #TODO: Include discount factor here 
+        depth = 0
+        while not terminated and depth < self.d:
             action = self.sim_env.action_space.sample() #randomly sample from environments action space
             observation,reward,terminated,truncated,info = self.sim_env.step(action)
             tot_reward += reward
+            depth+=1
+        #print(f"T reward:{tot_reward}")
+
+        tot_reward = tot_reward*self.gamma**depth #
         return tot_reward
 
     def _selection(self,v:Node):
@@ -173,11 +187,14 @@ class MCTS:
 
     def _backpropagation(self,R,v:Node):
         """
-        Recursivley update the number of times a node has beenm visited and the value of a node untill we reach the root node. 
+        Backtrack to update the number of times a node has beenm visited and the value of a node untill we reach the root node. 
         """
+        #TODO: discount factor here
+
         while v:
             v.N+= 1
             v.Q = v.Q + R
+            R = R*self.gamma
             v = v.parent
 
 
