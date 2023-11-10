@@ -22,3 +22,21 @@ conda env create --file environment.yml
 ```{bash}
 python do_mcts.py
 ```
+
+## Llama set up
+
+```
+git clone https://github.com/ggerganov/llama.cpp
+cd llama.cpp
+MAKE 
+```
+
+### Quantize llama model
+
+See https://github.com/facebookresearch/llama-recipes/blob/main/demo_apps/HelloLlamaLocal.ipynb
+
+```
+python3 -m pip install -r requirements.txt
+python convert.py <path_to_your_downloaded_llama-2-13b_model>
+./quantize <path_to_your_downloaded_llama-2-13b_model>/ggml-model-f16.gguf <path_to_your_downloaded_llama-2-13b_model>/ggml-model-q4_0.gguf q4_0
+```
