@@ -22,8 +22,7 @@ class Node:
         self.children = {} #children coresponding to the action taken ... #BUG: list ?
         self.N = 0 #N this the number of time this node has been visited
         self.Q = 0 # What is the curretn value of this node ... initialized to zero. 
-
-
+        
     def is_leaf(self) -> bool:
         """
         Is the node terminal?
@@ -45,6 +44,14 @@ class Node:
         """
         return self.state["terminated"]
 
+class ChanceNode(Node):
+    """
+    Here I am going to add 
+    
+    """
+    def __init__():
+        super().__init__()
+    # TODO: Figure out how to implement this... 
 
 
 class MCTS:
