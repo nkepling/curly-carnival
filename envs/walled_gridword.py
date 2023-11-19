@@ -8,7 +8,8 @@ from dataclasses import dataclass
 # TODO: Function to spawn target obejects in rooms that make sense given the object type. 
 # TODO: Walls not only to deliniate rooms and hallways but also an outer wall. 
 # TODO: Should this be modeled as a POMDP?????
-
+# TODO: Fix the dictionary uses... it fucks with deepcopy for MCTS
+# NOTE: There maybe some FIXME spread about
 
 MAPS = {
     "12x12" : [
@@ -109,7 +110,12 @@ class WalledGridworld(gym.Env):
     
     """
     
-    def __init__(self,size,map_name="12x12",target_objects) -> None:
+    def __init__(self,size: int,target_objects: list,map_name="12x12") -> None:
+
+        """
+        int size: side length of square grid
+        list target_objects: list of obejects that the agent needs to retrieve. 
+        """
         super().__init__()
 
         self.size = size #The size of the square gridworld
@@ -117,8 +123,8 @@ class WalledGridworld(gym.Env):
 
         ## I am going to hard code in walls ... 
 
-        self.desc =desc = np.array([list(i) for i in MAPS[map_name]])
-        print(desc)
+        self.floorplan =floorplan = np.array([list(i) for i in MAPS[map_name]])
+        # print(floorplan)
 
 
         self.observation_space = spaces.Dict(
@@ -205,7 +211,7 @@ class WalledGridworld(gym.Env):
         info
 
         """
-        direction = self._action_to_direction[action,:] #FI
+        direction = self._action_to_direction[action,:] #FIXME 
 
         self._agent_location = self._agent_location + direction #We don't have to worry about leaving the gird becasue the outside walls are terminal states.
         
@@ -213,7 +219,7 @@ class WalledGridworld(gym.Env):
             reward = -1
             terminated = True
 
-        else:
+        else: #TODO: Fix this because its a a dumb way to do this .. 
             for ind , loc in self._agent_location:
                 if all(self._agent_location == loc):
                     reward = 1 
@@ -252,8 +258,12 @@ class WalledGridworld(gym.Env):
         """
         return {"agent":self._agent_location,"targets": self._target_location}
     
-    def _simple_render(self):
-        pass
+
+        
+
+
+
+
 
 
  
