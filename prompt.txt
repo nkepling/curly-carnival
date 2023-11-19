@@ -1,0 +1,9 @@
+I am searching for objects in an apartment. If I say you find a spoon I need to know what room I am in. 
+
+For example: I found a spoon, what room am I in? 
+
+Oraganize your answers into a JSON object with following keys:
+
+{
+"answer":"kitchen
+}
