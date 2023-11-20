@@ -45,6 +45,16 @@ MAPS = {
 }
 
 @dataclass
+class Item:
+    """
+    Item class 
+
+    """
+    name: str
+    found: bool = False 
+
+
+
 class Cell:
     """
     A cell in the grid word. TBH idk if this is necessary yet.
@@ -55,9 +65,12 @@ class Cell:
 
     """
     loc : tuple
-    item: str
+    item: Item
     roomtype: str
     neighbors: list 
+
+
+
 
 def make_graph(map_name):
     #floorplan = np.asarray(MAPS[map_name],dtype='c')
@@ -69,7 +82,7 @@ def make_graph(map_name):
         for j in range(col):
             cell = Cell
             cell.loc = (i,j)
-            if floorplan[i,j] == b"W": 
+            if floorplan[i,j] == "W": 
                 cell.roomtype = "wall"
             else: 
                 cell.roomtype = "empty" #TODO  Figure out how to assign other roomtypes here
@@ -101,6 +114,11 @@ class WalledGridworld(gym.Env):
 
     ## Rewards
 
+    -1 if agent goes into a wall
+    +1 if agent collects an object
+    +1 if agent collects all the objects
+    0 otherwise
+
     ## Episode end
     The episode ends if the followiing happens:
 
@@ -110,7 +128,7 @@ class WalledGridworld(gym.Env):
     
     """
     
-    def __init__(self,size: int,target_objects: list,map_name="12x12") -> None:
+    def __init__(self,size: int,target_objects: list,map_name,render_mode=False) -> None:
 
         """
         int size: side length of square grid
@@ -130,7 +148,7 @@ class WalledGridworld(gym.Env):
         self.observation_space = spaces.Dict(
             {
                 "agent": spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                "target": spaces.Box(0, size - 1, shape=(2,), dtype=int),
+                "targets": spaces.Box(0, size - 1, shape=(2,), dtype=int),
             }
         )
 
@@ -157,9 +175,11 @@ class WalledGridworld(gym.Env):
 
         # 
         
-        self.target_objects = target_objects
+        # self.target_objects = target_objects # list of item names as strings
+        self.target_objects = [Item(i) for i in target_objects] 
         # self._target_locations = []
         self.objects_collected = 0  #Have all objects been collected?
+        self.render_mode = render_mode
 
 
     def reset(self,seed=None,options=None):
@@ -178,7 +198,7 @@ class WalledGridworld(gym.Env):
         for i in range(self.size):
             for j in range(self.size):
 
-                if self.floorplan[i][j] == "-" and [i,j]!=[1,1]:
+                if self.floorplan[i,j] == "-" and [i,j]!=[1,1]:
                     valid_locs.append([i,j])
         
         valid_locs = np.array(valid_locs)
@@ -187,6 +207,9 @@ class WalledGridworld(gym.Env):
 
         observation = self._get_obs()
         info = self._get_info()
+
+        if self.render_mode == True:
+            self._simple_render()
 
         return observation, info
 
@@ -213,29 +236,41 @@ class WalledGridworld(gym.Env):
 
         """
         direction = self._action_to_direction[action,:] 
+        x,y = self._agent_location = self._agent_location + direction #We don't have to worry about leaving the gird becasue the outside walls are terminal states.
+        ind = np.where((self._agent_location == self._target_locations).all(axis =1 ))[0]
 
-        self._agent_location = self._agent_location + direction #We don't have to worry about leaving the gird becasue the outside walls are terminal states.
-        
-        if self.desc == "W":
+        # for ind, val in self._target_locations:
+        #     if val == self._agent_location:
+
+        terminated = False
+        # This is the reward if the agent goes into a wall
+        if self.floorplan[x,y] == "W":
             reward = -1
-            terminated = True
+            # terminated = True
 
-        else: #TODO: Fix this because its a a dumb way to do this .. 
-            for ind , loc in self._agent_location:
-                if all(self._agent_location == loc):
-                    reward = 1 
-                    self._agent_location.pop(ind)
-                    self.objects_collected+=1
-                    break 
-
+        elif ind.size > 0:
+            if self.target_objects[ind[0]].found == False:
+                #print("found_one")
+                reward = 1
+                self.objects_collected += 1
+                self.target_objects[ind[0]].found = True
+            else:
+                reward = 0
             
-        if self.objects_collected == len(self.target_objects):
-            reward+=1 # You get an additional rewards for finding all the objects
-            terminated = True
+            if self.objects_collected == len(self.target_objects):
+                reward+=1 # You get an additional rewards for finding all the objects
+                terminated = True
+
+        else: 
+            reward = 0
+
 
         observation = self._get_obs()
-        info = self._get_info(0)
+        info = self._get_info()
         truncated = False
+
+        if self.render_mode == True:
+            self._simple_render()
         return observation,reward,terminated,truncated,info
 
     
@@ -259,6 +294,36 @@ class WalledGridworld(gym.Env):
         """
         return {"agent":self._agent_location,"targets": self._target_locations}
     
+    def _simple_render(self):
+        """
+        Simply print the grid world, agent, and target locations of a single episode
+
+        agent = "A"
+        objects = 1,2,3,4 ... 
+        walls = "W"  or maybe a # would look better 
+        empty = 
+
+        """
+
+        # print(self.floorplan)
+
+        f = self.floorplan
+        x,y  = self._agent_location
+        f[x,y] = "A"
+        for ind,loc in enumerate(self._target_locations):
+            f[loc[0],loc[1]] = f"{ind}"
+
+        for i in f:
+            i = "".join(i)
+            if "W" in i:
+                i = i.replace("W","#")
+            if "-" in i:
+                i = i.replace("-"," ")
+            print(i)
+        
+
+        
+    
 
         
 
@@ -271,9 +336,12 @@ class WalledGridworld(gym.Env):
 
 
 if __name__ == "__main__":
+    
     e = WalledGridworld(target_objects=[1,2,3,4],size = 14,map_name="14x14")
     e.reset()
+    e._simple_render()
     print(e._target_locations)
+    # print(e.floorplan)
 
 
 
