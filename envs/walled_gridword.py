@@ -158,6 +158,7 @@ class WalledGridworld(gym.Env):
         # 
         
         self.target_objects = target_objects
+        # self._target_locations = []
         self.objects_collected = 0  #Have all objects been collected?
 
 
@@ -177,7 +178,7 @@ class WalledGridworld(gym.Env):
         for i in range(self.size):
             for j in range(self.size):
 
-                if self.desc[i][j] == "-" and [i,j]!=[1,1]:
+                if self.floorplan[i][j] == "-" and [i,j]!=[1,1]:
                     valid_locs.append([i,j])
         
         valid_locs = np.array(valid_locs)
@@ -211,7 +212,7 @@ class WalledGridworld(gym.Env):
         info
 
         """
-        direction = self._action_to_direction[action,:] #FIXME 
+        direction = self._action_to_direction[action,:] 
 
         self._agent_location = self._agent_location + direction #We don't have to worry about leaving the gird becasue the outside walls are terminal states.
         
@@ -256,7 +257,7 @@ class WalledGridworld(gym.Env):
 
         How do you decide what the observation space should be?
         """
-        return {"agent":self._agent_location,"targets": self._target_location}
+        return {"agent":self._agent_location,"targets": self._target_locations}
     
 
         
@@ -270,9 +271,9 @@ class WalledGridworld(gym.Env):
 
 
 if __name__ == "__main__":
-    e = WalledGridworld(14,"14x14")
-    e.reset([1,2,3,4])
-    print(e.target_locations)
+    e = WalledGridworld(target_objects=[1,2,3,4],size = 14,map_name="14x14")
+    e.reset()
+    print(e._target_locations)
 
 
 
