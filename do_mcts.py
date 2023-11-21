@@ -6,7 +6,7 @@ from collections import defaultdict
 from render import Simple_Renderer
 
 # env = gym.make('MyGridWorld',render_mode="human")
-env = gym.make("WalledGridWorld-v0",size = 14,target_objects = ['a'],map_name="14x14")
+env = gym.make("WalledGridWorld-v0",size = 14,target_objects = ['a','b','c'],map_name="14x14")
 state = env.reset()
 observation, info = state
 src = observation['agent'] #staring location
