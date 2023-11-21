@@ -44,6 +44,8 @@ MAPS = {
     ]
 }
 
+
+
 @dataclass
 class Item:
     """
@@ -64,10 +66,9 @@ class Cell:
     rootype: (kitchen,bathroom,wall)
 
     """
-    loc : tuple
-    item: Item
-    roomtype: str
-    neighbors: list 
+    item: Item = Item("empty")
+    roomtype: str = "None"
+    
 
 
 
@@ -142,6 +143,15 @@ class WalledGridworld(gym.Env):
         ## I am going to hard code in walls ... 
 
         self.floorplan =floorplan = np.array([list(i) for i in MAPS[map_name]])
+        r = np.zeros((size,size))
+        
+        # for i in range(size):
+        #     for j in range(size):
+        #         if floorplan[i,j] == "W":
+        #             r[i,j] = 0
+        #         elif floorplan[i,j] == "-":
+        #             r[i,j] = 0
+        self.r = r
         # print(floorplan)
 
 
@@ -165,7 +175,7 @@ class WalledGridworld(gym.Env):
         #     0: np.array([1, 0]),
         #     1: np.array([0, 1]),
         #     2: np.array([-1, 0]),
-        #     3: np.array([0, -1]),
+        #     3: np.array([0, -1]),]
         # }
 
         self._action_to_direction = np.array([[1,0],
@@ -175,8 +185,9 @@ class WalledGridworld(gym.Env):
 
         # 
         
-        # self.target_objects = target_objects # list of item names as strings
-        self.target_objects = [Item(i) for i in target_objects] 
+        self.target_objects = target_objects # list of item names as strings
+        # self.target_objects = [Item(i) for i in target_objects] 
+
         # self._target_locations = []
         self.objects_collected = 0  #Have all objects been collected?
         self.render_mode = render_mode
@@ -203,7 +214,25 @@ class WalledGridworld(gym.Env):
         
         valid_locs = np.array(valid_locs)
         inds = np.random.choice(range(len(valid_locs)),len(self.target_objects),replace = False)
-        self._target_locations = list(valid_locs[inds,:])
+        self._target_locations = valid_locs[inds,:]
+
+        for loc in self._target_locations: # set rewards in rewards matrix
+            self.r[loc[0],loc[1]] = 1
+
+        self.item_map = [[] for i in range(self.size)]
+        items = self.target_objects
+
+        for i in range(self.size):
+            for j in range(self.size):
+                if self.r[i,j] == 1:
+                    item = items.pop()
+                    self.item_map[i].append(Item(item))
+                elif self.floorplan[i,j] == "W": 
+                    self.item_map[i].append(Item("wall"))
+                else:
+                    self.item_map[i].append(Item("empty"))
+        #print(self.r)
+        # print(self.item_map)
 
         observation = self._get_obs()
         info = self._get_info()
@@ -236,34 +265,40 @@ class WalledGridworld(gym.Env):
 
         """
         direction = self._action_to_direction[action,:] 
-        x,y = self._agent_location = self._agent_location + direction #We don't have to worry about leaving the gird becasue the outside walls are terminal states.
-        ind = np.where((self._agent_location == self._target_locations).all(axis =1 ))[0]
 
-        # for ind, val in self._target_locations:
-        #     if val == self._agent_location:
+        # x,y=self._agent_location = np.clip(
+        #     self._agent_location + direction, 0, self.size - 1
+        # )
+        x,y = self._agent_location = self._agent_location + direction
+        
+        item_in_cell = self.item_map[x][y].name
 
-        terminated = False
-        # This is the reward if the agent goes into a wall
-        if self.floorplan[x,y] == "W":
-            reward = -1
-            # terminated = True
+        if item_in_cell in self.target_objects:
+            check = True
 
-        elif ind.size > 0:
-            if self.target_objects[ind[0]].found == False:
-                #print("found_one")
-                reward = 1
-                self.objects_collected += 1
-                self.target_objects[ind[0]].found = True
-            else:
-                reward = 0
-            
-            if self.objects_collected == len(self.target_objects):
-                reward+=1 # You get an additional rewards for finding all the objects
+
+        if item_in_cell == "wall": terminated = True
+        # elif item_in_cell == "empty": terminated = False
+        # else: terminated = True
+        else: terminated = False
+        reward = 0
+
+        for loc in self._target_locations:
+            if np.array_equal(self._agent_location,loc):
                 terminated = True
-
-        else: 
-            reward = 0
-
+                # reward = self.r[x,y]
+                reward = 1
+                break 
+        
+    
+        # elif reward == 1 and self.item_map[x][y].found == False:
+        #     self.objects_collected+=1 
+        #     self.item_map[x][y].found = True
+        #     terminated = True
+        #     # if self.objects_collected == len(self.target_objects):
+        #     #     terminated = True
+        #     # else: terminated = False
+        # else: terminated = False
 
         observation = self._get_obs()
         info = self._get_info()

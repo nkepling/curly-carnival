@@ -19,7 +19,8 @@ class Node:
 
         self.action = action #what was the action taken to get here? The "incoming action"
         self.parent = parent #what is the parent node 
-        self.children = {} #children coresponding to the action taken ... #BUG: list ?
+        #self.children = {} #children coresponding to the action taken ... #BUG: list ?
+        self.children = []
         self.N = 0 #N this the number of time this node has been visited
         self.Q = 0 # What is the curretn value of this node ... initialized to zero. 
         
@@ -27,7 +28,7 @@ class Node:
         """
         Is the node terminal?
         """
-        return self.children == {}
+        return self.children == []
     
     def is_fully_expanded(self,env) -> bool:
         """
@@ -120,9 +121,12 @@ class MCTS:
         #     print(f"Q:{child.Q}")
         #     print(f"N : {child.N}")
 
-        action_values = {k:(child.Q/child.N) for k,child in self.v0.children.items()} #BUG? could be unpackign weird
+        action_values = [(child.Q/child.N) for child in self.v0.children]
+
+        # action_values = {k:(child.Q/child.N) for k,child in self.v0.children.items()} #BUG? could be unpackign weird
         print(action_values)
-        best_action = max(action_values,key=action_values.get)
+        # best_action = max(action_values,key=action_values.get)
+        best_action = self.v0.children[np.argmax(action_values)].action
         return best_action
 
 
@@ -136,7 +140,7 @@ class MCTS:
         return v 
 
 
-    def _default_policy(self,v):
+    def _default_policy(self,v:Node):
         """
         Simulate/Playout step 
 
@@ -147,6 +151,7 @@ class MCTS:
         # sim_env = deepcopy(v.env)
         
         tot_reward = 0
+        # terminated = v.is_terminal()
         terminated = False
         #TODO: Include discount factor here 
         depth = 0
@@ -164,11 +169,14 @@ class MCTS:
         """
         Pick the next node to go down in the search tree based on UTC
         """
-        child_nodes = list(v.children.values()) #dictionary k = action, v = node
+        # child_nodes = list(v.children.values()) #dictionary k = action, v = node
+        child_nodes = v.children
 
+        # best_child_ind = np.argmax([child.Q/child.N + self.c * np.sqrt(2*np.log(v.N)/(child.N)) for child in child_nodes])        
         best_child_ind = np.argmax([child.Q/child.N + self.c * np.sqrt(2*np.log(v.N)/(child.N)) for child in child_nodes])        
-        # best_child = max(k,child.Q/child.N + self.c * np.sqrt(2*np.log(v.N)/(child.N)) for k,child in child_nodes])     
-        best_child = child_nodes[best_child_ind] 
+        best_child = child_nodes[best_child_ind]
+        # best_child = child_nodes[best_child_ind] 
+        # best_chile = np.argmax(bes)
         best_action = best_child.action
         self.sim_env.step(best_action)
         return best_child
@@ -180,14 +188,14 @@ class MCTS:
         """
         # Select an action that we have not taken yet. 
         all_actions = {i for i in range(self.sim_env.action_space.n)} #grab all actions in action space
-        old_actions = set(v.children.keys()) #look at all the actions that we have already taken. 
+        old_actions = set(child.action for child in v.children)#look at all the actions that we have already taken. 
         new_actions = list(all_actions.difference(old_actions)) #get a list of action we have not taken
         action = new_actions[np.random.randint(len(new_actions))] #sample a random untaken action
         new_state = self.sim_env.step(action) #take random action and grab state
 
 
         v_prime = Node(parent=v,state=new_state,action=action) #save new state and action taken in search tree node. 
-        v.children[action] = v_prime
+        v.children.append(v_prime)
 
         return v_prime
 

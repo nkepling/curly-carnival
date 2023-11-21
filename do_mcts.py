@@ -45,15 +45,17 @@ done = False
 iter_num = 0
 
 # c = 1.44
-c = 1
+c = 1.44
+
 #gamma = 0.9
-gamma = 0.9
+gamma = 0.95
 # r.simple_render(src,tgt)
 
 print(simple_render)
+# print(env.r)
 
 while not done:
-    mcts = MCTS(env,state,d=100,m=1500,c=c,gamma=gamma)
+    mcts = MCTS(env,state,d=300,m=5000,c=c,gamma=gamma)
     action = mcts.search()
     observation,reward,done,truncated, info = env.step(action=action)
     # r.simple_render(observation["agent"],observation["targets"])
@@ -66,7 +68,7 @@ while not done:
  
     print(simple_render)
     print(observation)
-    print(reward)
+    print(done)
     print(iter_num)
     if done: 
         print("Found")
