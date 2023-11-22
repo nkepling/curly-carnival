@@ -41,7 +41,25 @@ MAPS = {
         "W------------W",
         "W----W--W----W",
         "WWWWWWWWWWWWWW",
+    ],
+    "5x5" : [
+        "WWWWW",
+        'W---W',
+        'W-W-W',
+        'W---W',
+        'WWWWW'
+    ],
+    "maze" : [
+        'WWWWW-',
+        '------',
+        'W-WWWW',
+        'WW-WWW',
+        'WWW-WW',
+        '------',
+        '------'
+
     ]
+
 }
 
 
@@ -190,6 +208,7 @@ class WalledGridworld(gym.Env):
 
         # self._target_locations = []
         self.objects_collected = 0  #Have all objects been collected?
+        # self.visited = [False for _ in target_objects]
         self.render_mode = render_mode
 
 
@@ -208,7 +227,6 @@ class WalledGridworld(gym.Env):
         valid_locs = []
         for i in range(self.size):
             for j in range(self.size):
-
                 if self.floorplan[i,j] == "-" and [i,j]!=[1,1]:
                     valid_locs.append([i,j])
         
@@ -283,14 +301,17 @@ class WalledGridworld(gym.Env):
         else: terminated = False
         reward = 0
 
-        for loc in self._target_locations:
+        for ind,loc in enumerate(self._target_locations):
             if np.array_equal(self._agent_location,loc):
                 terminated = True
+                self.objects_collected += 1
                 # reward = self.r[x,y]
                 reward = 1
                 break 
         
-    
+        # if self.objects_collected == len(self.target_objects):
+        #     reward = 20
+        #     terminated = True
         # elif reward == 1 and self.item_map[x][y].found == False:
         #     self.objects_collected+=1 
         #     self.item_map[x][y].found = True

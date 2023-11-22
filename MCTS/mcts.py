@@ -149,7 +149,8 @@ class MCTS:
 
         """
         # sim_env = deepcopy(v.env)
-        
+        if v.is_terminal():
+            return v.state['reward']
         tot_reward = 0
         # terminated = v.is_terminal()
         terminated = False
