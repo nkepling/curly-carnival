@@ -84,6 +84,7 @@ class MCTS:
 
 
     NOTE: This implemention will only support discrete action spaces. 
+
     """
     def __init__(self,env:gym.Env,state,d,m,c,gamma) -> None:
         """
@@ -122,11 +123,16 @@ class MCTS:
         #     print(f"N : {child.N}")
 
         action_values = [(child.Q/child.N) for child in self.v0.children]
-
         # action_values = {k:(child.Q/child.N) for k,child in self.v0.children.items()} #BUG? could be unpackign weird
+        # print("UP, DOWN, RIGHT, LEFT")
         print(action_values)
+        max_ind = np.argmax(action_values)
         # best_action = max(action_values,key=action_values.get)
         best_action = self.v0.children[np.argmax(action_values)].action
+        possible_actions = [child.action for child in self.v0.children]
+        a_v_pairs = {k:v for k,v in zip(possible_actions,action_values) }
+        print(f"action values: {a_v_pairs}")
+        print(f"action taken: {best_action}") #BUG: The 
         return best_action
 
 
@@ -151,17 +157,24 @@ class MCTS:
         # sim_env = deepcopy(v.env)
         
         tot_reward = 0
+        # reward = 0q
         # terminated = v.is_terminal()
         terminated = False
         #TODO: Include discount factor here 
         depth = 0
-        while not terminated and depth < self.d:
-            action = self.sim_env.action_space.sample() #randomly sample from environments action space
-            observation,reward,terminated,truncated,info = self.sim_env.step(action)
-            tot_reward += reward
-            depth+=1
-        #print(f"T reward:{tot_reward}")
 
+        if v.state['reward'] > 0 and terminated:
+            tot_reward += v.state['reward']
+        else:    
+            while not terminated and depth < self.d:
+                action = self.sim_env.action_space.sample() #randomly sample from environments action space
+                observation,reward,terminated,truncated,info = self.sim_env.step(action)
+                # tot_reward += reward
+                # tot_reward = reward
+                depth+=1
+            tot_reward += reward
+
+        #print(f"T reward:{tot_reward}")
         tot_reward = tot_reward*self.gamma**depth #
         return tot_reward
 

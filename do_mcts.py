@@ -6,7 +6,7 @@ from collections import defaultdict
 from render import Simple_Renderer
 
 # env = gym.make('MyGridWorld',render_mode="human")
-env = gym.make("WalledGridWorld-v0",size = 14,target_objects = ['a','b','c'],map_name="14x14")
+env = gym.make("WalledGridWorld-v0",size = 14,target_objects = ['a','b'],map_name="14x14")
 state = env.reset()
 observation, info = state
 src = observation['agent'] #staring location
@@ -48,14 +48,14 @@ iter_num = 0
 c = 1.44
 
 #gamma = 0.9
-gamma = 0.95
+gamma = 0.9
 # r.simple_render(src,tgt)
 
 print(simple_render)
 # print(env.r)
 
 while not done:
-    mcts = MCTS(env,state,d=300,m=5000,c=c,gamma=gamma)
+    mcts = MCTS(env,state,d=10000,m=10000,c=c,gamma=gamma)
     action = mcts.search()
     observation,reward,done,truncated, info = env.step(action=action)
     # r.simple_render(observation["agent"],observation["targets"])
@@ -68,8 +68,8 @@ while not done:
  
     print(simple_render)
     print(observation)
-    print(done)
-    print(iter_num)
+    print(info)
+    # print(iter_num)
     if done: 
         print("Found")
 

@@ -140,25 +140,14 @@ class WalledGridworld(gym.Env):
         self.size = size #The size of the square gridworld
         self.G = None # Maybe I'll add a netorkx graph here to make my life easier. 
 
-        ## I am going to hard code in walls ... 
-
         self.floorplan =floorplan = np.array([list(i) for i in MAPS[map_name]])
         r = np.zeros((size,size))
-        
-        # for i in range(size):
-        #     for j in range(size):
-        #         if floorplan[i,j] == "W":
-        #             r[i,j] = 0
-        #         elif floorplan[i,j] == "-":
-        #             r[i,j] = 0
         self.r = r
-        # print(floorplan)
-
-
+        
         self.observation_space = spaces.Dict(
             {
                 "agent": spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                "targets": spaces.Box(0, size - 1, shape=(2,), dtype=int),
+                "targets": spaces.Box(0, size - 1, shape=(2,len(target_objects)), dtype=int),
             }
         )
 
@@ -169,27 +158,20 @@ class WalledGridworld(gym.Env):
         the direction we will walk in if that action is taken.
         I.e. 0 corresponds to "right", 1 to "up" etc.
         """
-
-        #NOTE: Change to a numpy array. Dictionaries are slow for deepcopy ...
-        # self._action_to_direction = {
-        #     0: np.array([1, 0]),
-        #     1: np.array([0, 1]),
-        #     2: np.array([-1, 0]),
-        #     3: np.array([0, -1]),]
-        # }
-
+        # up, right , down, left
         self._action_to_direction = np.array([[1,0],
                                               [0,1],
                                               [-1,0],
                                               [0,-1]])
 
-        # 
-        
         self.target_objects = target_objects # list of item names as strings
-        # self.target_objects = [Item(i) for i in target_objects] 
-
-        # self._target_locations = []
-        self.objects_collected = 0  #Have all objects been collected?
+        self.item_lookup = {k+1:v for k,v in enumerate(target_objects)} # NOTE: It may be better to use a list here b/c we need to deep copy in MCTS... 
+        self.objects_collected = {k:False for k,v in zip(self.item_lookup.keys(),self.item_lookup.keys())}
+        self.item_lookup[len(target_objects) + 1] = "W"
+        self.item_lookup[0] = "empty"
+        self.item_map = np.zeros((size,size))
+        # self.item_lookup = [target_objects + "W"]
+        # self.objects_collected = 0  #Have all objects been collected?
         self.render_mode = render_mode
 
 
@@ -204,33 +186,42 @@ class WalledGridworld(gym.Env):
         """
         self._agent_location = np.array((1,1)) #(0,0) would be a wall
 
+        #### RANDOMLY DISTRIBUTE OBJECTS IN MAP #########
         # FIXME: Can you use np.where or something here????
         valid_locs = []
         for i in range(self.size):
             for j in range(self.size):
-
                 if self.floorplan[i,j] == "-" and [i,j]!=[1,1]:
                     valid_locs.append([i,j])
         
         valid_locs = np.array(valid_locs)
         inds = np.random.choice(range(len(valid_locs)),len(self.target_objects),replace = False)
         self._target_locations = valid_locs[inds,:]
-
-        for loc in self._target_locations: # set rewards in rewards matrix
+ 
+        ##### SET REWARDS MATRIX and ITEM MAP ##########
+        for ind,loc in enumerate(self._target_locations): 
             self.r[loc[0],loc[1]] = 1
-
-        self.item_map = [[] for i in range(self.size)]
-        items = self.target_objects
+            self.item_map[loc[0],loc[1]] = ind + 1 # We can then look up the item type now 
 
         for i in range(self.size):
             for j in range(self.size):
-                if self.r[i,j] == 1:
-                    item = items.pop()
-                    self.item_map[i].append(Item(item))
-                elif self.floorplan[i,j] == "W": 
-                    self.item_map[i].append(Item("wall"))
-                else:
-                    self.item_map[i].append(Item("empty"))
+                if self.floorplan[i,j] == "W":
+                    self.item_map[i,j] = len(self.target_objects) + 1
+        ##### SET ITEM MAP ##############
+        
+        # # self.item_map = [[] for i in range(self.size)]
+        # self.item_map = [[0 for _ in range(self.size)] for _ in range(self.size)]
+        # items = self.target_objects
+
+        # for i in range(self.size):
+        #     for j in range(self.size):
+        #         if self.r[i,j] == 1:
+        #             item = items.pop()
+        #             self.item_map[i][j] = Item(item)
+        #         elif self.floorplan[i,j] == "W": 
+        #             self.item_map[i][j]= Item("wall")
+        #         else:
+        #             self.item_map[i][j] = Item("empty")
         #print(self.r)
         # print(self.item_map)
 
@@ -266,31 +257,44 @@ class WalledGridworld(gym.Env):
         """
         direction = self._action_to_direction[action,:] 
 
-        # x,y=self._agent_location = np.clip(
-        #     self._agent_location + direction, 0, self.size - 1
-        # )
-        x,y = self._agent_location = self._agent_location + direction
+        x,y=self._agent_location = np.clip(
+            self._agent_location + direction, 0, self.size - 1
+        )
+        # x,y = self._agent_location = self._agent_location + direction
         
-        item_in_cell = self.item_map[x][y].name
+        item_in_cell = self.item_lookup[self.item_map[x,y]]
 
-        if item_in_cell in self.target_objects:
-            check = True
-
-
-        if item_in_cell == "wall": terminated = True
-        # elif item_in_cell == "empty": terminated = False
-        # else: terminated = True
-        else: terminated = False
-        reward = 0
-
-        for loc in self._target_locations:
-            if np.array_equal(self._agent_location,loc):
-                terminated = True
-                # reward = self.r[x,y]
-                reward = 1
-                break 
-        
+        # if self.item_map[x,y] == len(self.target_objects) + 1:
+        #     terminated = True 
+        if item_in_cell == "W": 
+            terminated = True
+            reward = 0 
+        else: 
+            terminated = False
+            reward = 0
     
+
+        ########################################################################
+        # Give a reward for reaching a cell with an object for the first time. #
+        ########################################################################
+
+        if 0 < self.item_map[x,y] <= len(self.target_objects):
+            if not self.objects_collected[self.item_map[x,y]]:
+                # reward = 10 ** (sum(self.objects_collected.values())+1) 
+                reward = 100
+                # terminated = True
+                # reward = 100
+                self.objects_collected[self.item_map[x,y]]  = True
+
+        #################################################################################################
+        # Give a really big reward for collecting all the objects. This is also the terminal state.... ##
+        #################################################################################################
+
+        if sum(self.objects_collected.values()) == len(self.target_objects):
+            reward = 1000
+            # reward = 10 ** (sum(self.objects_collected.values()) + 2) 
+            terminated = True 
+
         # elif reward == 1 and self.item_map[x][y].found == False:
         #     self.objects_collected+=1 
         #     self.item_map[x][y].found = True
@@ -318,7 +322,8 @@ class WalledGridworld(gym.Env):
         """
         return {
 
-            "distances" : [np.linalg.norm(self._agent_location - t,ord=1) for t in self._target_locations ]
+            "distances" : [np.linalg.norm(self._agent_location - t,ord=1) for t in self._target_locations ],
+            "objects_found" : self.objects_collected
         }
 
     def _get_obs(self):
