@@ -9,6 +9,7 @@ from dataclasses import dataclass
 # TODO: Walls not only to deliniate rooms and hallways but also an outer wall. 
 # TODO: Should this be modeled as a POMDP?????
 # TODO: Fix the dictionary uses... it fucks with deepcopy for MCTS
+# TODO: Fix observation space warnings.. 
 # NOTE: There maybe some FIXME spread about
 
 MAPS = {
@@ -122,7 +123,6 @@ class WalledGridworld(gym.Env):
     We can assume that the agent can precieve the items of the cell that it is in and what is directly adjacent to it.
 
     Should this be modeled as a POMDP?????
-
     
     ## Action space
 
@@ -133,9 +133,8 @@ class WalledGridworld(gym.Env):
 
     ## Rewards
 
-    -1 if agent goes into a wall
+    0 if agent goes into a wall
     +1 if agent collects an object
-    +1 if agent collects all the objects
     0 otherwise
 
     ## Episode end
@@ -172,11 +171,10 @@ class WalledGridworld(gym.Env):
         self.r = r
         # print(floorplan)
 
-
         self.observation_space = spaces.Dict(
             {
-                "agent": spaces.Box(0, size - 1, shape=(2,), dtype=int),
-                "targets": spaces.Box(0, size - 1, shape=(2,), dtype=int),
+                "agent": spaces.Discrete(size),
+                "targets": spaces.Discrete(len(target_objects)),
             }
         )
 
@@ -211,6 +209,22 @@ class WalledGridworld(gym.Env):
         # self.visited = [False for _ in target_objects]
         self.render_mode = render_mode
 
+    def _distribute_targets(self):
+        """
+        Randomly distrbute target objects on grid.
+        """
+        valid_locs = []
+        for i in range(self.size):
+            for j in range(self.size):
+                if self.floorplan[i,j] == "-" and [i,j]!=[1,1]:
+                    valid_locs.append((i,j))
+
+        # valid_locs = np.array(valid_locs)
+        inds = np.random.choice(range(len(valid_locs)),len(self.target_objects),replace = False)
+        self._target_locations = set([valid_locs[i] for i in inds])
+        for loc in self._target_locations: # set rewards in rewards matrix
+            self.r[loc[0],loc[1]] = 1
+
 
     def reset(self,seed=None,options=None):
 
@@ -223,23 +237,10 @@ class WalledGridworld(gym.Env):
         """
         self._agent_location = np.array((1,1)) #(0,0) would be a wall
 
-        # FIXME: Can you use np.where or something here????
-        valid_locs = []
-        for i in range(self.size):
-            for j in range(self.size):
-                if self.floorplan[i,j] == "-" and [i,j]!=[1,1]:
-                    valid_locs.append([i,j])
-        
-        valid_locs = np.array(valid_locs)
-        inds = np.random.choice(range(len(valid_locs)),len(self.target_objects),replace = False)
-        self._target_locations = valid_locs[inds,:]
-
-        for loc in self._target_locations: # set rewards in rewards matrix
-            self.r[loc[0],loc[1]] = 1
+        self._distribute_targets()
 
         self.item_map = [[] for i in range(self.size)]
         items = self.target_objects
-
         for i in range(self.size):
             for j in range(self.size):
                 if self.r[i,j] == 1:
@@ -284,42 +285,37 @@ class WalledGridworld(gym.Env):
         """
         direction = self._action_to_direction[action,:] 
 
-        # x,y=self._agent_location = np.clip(
-        #     self._agent_location + direction, 0, self.size - 1
-        # )
-        x,y = self._agent_location = self._agent_location + direction
+        x,y=self._agent_location = np.clip(
+            self._agent_location + direction, 0, self.size - 1
+        )
+
+        # x,y = self._agent_location = self._agent_location + direction
+        cur = (x,y)
+
+        ###########################
+        # Define reward structure #
+        ###########################
+
+        if cur in self._target_locations:
+            reward = 1 
+            self._target_locations.remove(cur)
+        else:
+            reward = 0 
         
         item_in_cell = self.item_map[x][y].name
 
-        if item_in_cell in self.target_objects:
-            check = True
+        ##########################
+        # Define terminal state  #
+        ##########################
 
-
-        if item_in_cell == "wall": terminated = True
-        # elif item_in_cell == "empty": terminated = False
-        # else: terminated = True
-        else: terminated = False
-        reward = 0
-
-        for ind,loc in enumerate(self._target_locations):
-            if np.array_equal(self._agent_location,loc):
-                terminated = True
-                self.objects_collected += 1
-                # reward = self.r[x,y]
-                reward = 1
-                break 
+        if item_in_cell == "wall": 
+            terminated = True
+        elif len(self._target_locations) == 0:
+            reward = 20
+            terminated = True 
+        else: 
+            terminated = False
         
-        # if self.objects_collected == len(self.target_objects):
-        #     reward = 20
-        #     terminated = True
-        # elif reward == 1 and self.item_map[x][y].found == False:
-        #     self.objects_collected+=1 
-        #     self.item_map[x][y].found = True
-        #     terminated = True
-        #     # if self.objects_collected == len(self.target_objects):
-        #     #     terminated = True
-        #     # else: terminated = False
-        # else: terminated = False
 
         observation = self._get_obs()
         info = self._get_info()
@@ -327,13 +323,14 @@ class WalledGridworld(gym.Env):
 
         if self.render_mode == True:
             self._simple_render()
+
         return observation,reward,terminated,truncated,info
 
     
     def _get_info(self):
         """
         Return: A dictionary with distances between agent and location
-
+        Inforamtion not available to the agent. 
 
         TODO: add a k,v term for precieved items in gridworld... 
         """

@@ -57,7 +57,7 @@ MAPS = {
 }
 
 # env = gym.make('MyGridWorld',render_mode="human")
-env = gym.make("WalledGridWorld-v0",size = 6,target_objects = ['a'],map_name="maze")
+env = gym.make("WalledGridWorld-v0",size = 14,target_objects = ['a','b','c','d'],map_name="14x14")
 state = env.reset()
 observation, info = state
 src = observation['agent'] #staring location
@@ -83,7 +83,7 @@ print(f"Targt loc: {tgt}")
 #         "WWWWWWWWWWWWWW",
 #     ]])
 
-simple_render = np.array([list(i) for i in MAPS["maze"]])
+simple_render = np.array([list(i) for i in MAPS["14x14"]])
 # simple_render = np.full((10,10),"-")
 simple_render[src[0],src[1]] = "A"
 
@@ -99,18 +99,19 @@ iter_num = 0
 
 # c = 1.44
 c = 1.44
+# c = 1/np.sqrt(2)
 
-#gamma = 0.9
+gamma = 0.2
 # gamma = 0.9
 
-gamma = 1/np.sqrt(2)
+
 # r.simple_render(src,tgt)
 
 print(simple_render)
 # print(env.r)
 
 while not done:
-    mcts = MCTS(env,state,d=1000,m=1000,c=c,gamma=gamma)
+    mcts = MCTS(env,state,d=500,m=5000,c=c,gamma=gamma)
     action = mcts.search()
     observation,reward,done,truncated, info = env.step(action=action)
     # r.simple_render(observation["agent"],observation["targets"])

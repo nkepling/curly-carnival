@@ -77,6 +77,8 @@ class Simple_Renderer:
             if "-" in i:
                 i = i.replace("-"," ")
             print(i)
+
+    
             
 
 
