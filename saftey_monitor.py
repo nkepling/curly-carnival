@@ -26,7 +26,8 @@ class Monitor:
         """
         Check if the action will take the agent into a wall. 
         """
-        pass
+        
+        if 
 
     def objects_collected(action):
         """

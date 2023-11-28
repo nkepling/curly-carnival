@@ -50,14 +50,14 @@ MAPS = {
         'W---W',
         'WWWWW'
     ],
-    "maze" : [
-        'WWWWW-',
-        '------',
-        'W-WWWW',
-        'WW-WWW',
-        'WWW-WW',
-        '------',
-        '------'
+     "maze" : [
+        'WWWWW--',
+        '-------',
+        'W-WWWW-',
+        'W--WWW-',
+        'WW--WW-',
+        '-------',
+        '-------'
 
     ]
 
@@ -225,6 +225,11 @@ class WalledGridworld(gym.Env):
         for loc in self._target_locations: # set rewards in rewards matrix
             self.r[loc[0],loc[1]] = 1
 
+    def _generate_floorplan():
+        """
+        A fucntion that creates a 2d array with the each cell having a class 
+        """
+        pass
 
     def reset(self,seed=None,options=None):
 
@@ -252,7 +257,7 @@ class WalledGridworld(gym.Env):
                     self.item_map[i].append(Item("empty"))
         #print(self.r)
         # print(self.item_map)
-
+        self.num_steps = 0 
         observation = self._get_obs()
         info = self._get_info()
 
@@ -283,6 +288,7 @@ class WalledGridworld(gym.Env):
         info
 
         """
+        
         direction = self._action_to_direction[action,:] 
 
         x,y=self._agent_location = np.clip(
@@ -291,31 +297,44 @@ class WalledGridworld(gym.Env):
 
         # x,y = self._agent_location = self._agent_location + direction
         cur = (x,y)
+        Found = False
 
         ###########################
         # Define reward structure #
         ###########################
 
         if cur in self._target_locations:
-            reward = 1 
+            # reward = 10**self.objects_collected
+            reward = 1
+            # Found = True
+            self.objects_collected+=1 
             self._target_locations.remove(cur)
         else:
-            reward = 0 
+            reward = 0
         
+        #######################################################
+        # Add a negetive reward for each object not collected #
+        #######################################################
+        # reward += -len(self._target_locations)
+
         item_in_cell = self.item_map[x][y].name
 
         ##########################
-        # Define terminal state  #
+        # Define terminal states  #
         ##########################
 
         if item_in_cell == "wall": 
             terminated = True
         elif len(self._target_locations) == 0:
             reward = 20
+            # reward = 10**self.objects_collected
             terminated = True 
+        elif Found:
+            terminated = True
         else: 
             terminated = False
         
+
 
         observation = self._get_obs()
         info = self._get_info()
