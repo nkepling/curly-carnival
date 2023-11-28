@@ -326,7 +326,7 @@ class WalledGridworld(gym.Env):
         if item_in_cell == "wall": 
             terminated = True
         elif len(self._target_locations) == 0:
-            reward = 20
+            # reward = 20
             # reward = 10**self.objects_collected
             terminated = True 
         elif Found:
