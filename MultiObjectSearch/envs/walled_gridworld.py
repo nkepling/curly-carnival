@@ -3,6 +3,7 @@ import numpy as np
 from gymnasium import spaces
 import networkx as nx
 from dataclasses import dataclass
+import yaml
 
 # TODO: Function to randomly spawn agent/Maybe the agent always starts in a corner of a room.... 
 # TODO: Function to spawn target obejects in rooms that make sense given the object type. 
@@ -12,57 +13,9 @@ from dataclasses import dataclass
 # TODO: Fix observation space warnings.. 
 # NOTE: There maybe some FIXME spread about
 
-MAPS = {
-    "12x12" : [
-        "----W--W----",
-        "------------",
-        "------------",
-        "----W--W----",
-        "W--WW--WW--W",
-        "------------",
-        "------------",
-        "W--WW--WW--W",
-        "----W--W----",
-        "------------",
-        "------------",
-        "----W--W----"
-    ],
-    "14x14" : [
-        "WWWWWWWWWWWWWW",
-        "W----W--W----W",
-        "W------------W",
-        "W------------W",
-        "W----W--W----W",
-        "WW--WW--WW--WW",
-        "W------------W",
-        "W------------W",
-        "WW--WW--WW--WW",
-        "W----W--W----W",
-        "W------------W",
-        "W------------W",
-        "W----W--W----W",
-        "WWWWWWWWWWWWWW",
-    ],
-    "5x5" : [
-        "WWWWW",
-        'W---W',
-        'W-W-W',
-        'W---W',
-        'WWWWW'
-    ],
-     "maze" : [
-        'WWWWW--',
-        '-------',
-        'W-WWWW-',
-        'W--WWW-',
-        'WW--WW-',
-        '-------',
-        '-------'
 
-    ]
-
-}
-
+with open("./MAPS.yaml","r") as f:
+    MAPS = yaml.load(f, Loader=yaml.FullLoader)
 
 
 @dataclass
@@ -326,8 +279,9 @@ class WalledGridworld(gym.Env):
         if item_in_cell == "wall": 
             terminated = True
         elif len(self._target_locations) == 0:
-            # reward = 20
+            reward = 20
             # reward = 10**self.objects_collected
+            print('Found')
             terminated = True 
         elif Found:
             terminated = True

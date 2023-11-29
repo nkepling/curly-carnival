@@ -19,15 +19,14 @@ class Monitor:
     def __init__(self,grid) -> None:
         """
         grid : gridworld map
-        """
+        """ 
         self.grid = grid
 
     def collision_avoidance(observation,action):
         """
         Check if the action will take the agent into a wall. 
         """
-        
-        if 
+        pass
 
     def objects_collected(action):
         """

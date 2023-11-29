@@ -1,0 +1,52 @@
+12x12:
+- '----W--W----'
+- '------------'
+- '------------'
+- '----W--W----'
+- W--WW--WW--W
+- '------------'
+- '------------'
+- W--WW--WW--W
+- '----W--W----'
+- '------------'
+- '------------'
+- '----W--W----'
+14x14:
+- WWWWWWWWWWWWWW
+- W----W--W----W
+- W------------W
+- W------------W
+- W----W--W----W
+- WW--WW--WW--WW
+- W------------W
+- W------------W
+- WW--WW--WW--WW
+- W----W--W----W
+- W------------W
+- W------------W
+- W----W--W----W
+- WWWWWWWWWWWWWW
+5x5:
+- WWWWW
+- W---W
+- W-W-W
+- W---W
+- WWWWW
+maze:
+- -WWWWWW
+- --WWWWW
+- W--WWWW
+- WW--WWW
+- WWW--WW
+- WWWW--W
+- WWWWW--
+9x9:
+- WWWWWWWWW
+- W--W-W--W
+- W--W-W--W
+- W--W-W--W
+- W-------W
+- W--W-W--W
+- W--W-W--W
+- W--W-W--W
+- WWWWWWWWW

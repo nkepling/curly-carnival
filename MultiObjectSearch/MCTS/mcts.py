@@ -182,6 +182,7 @@ class MCTS:
             action = self.sim_env.action_space.sample() #randomly sample from environments action space
             observation,reward,terminated,truncated,info = self.sim_env.step(action)
             tot_reward += reward*self.gamma**depth
+            # tot_reward += reward
             depth+=1
         #print(f"T reward:{tot_reward}")
 
