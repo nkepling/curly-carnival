@@ -144,7 +144,7 @@ class MCTS:
 
         best_child_ind,action_values = best_child(self.v0,0)
         # best_child_ind,action_values = pareto_best_child(self.v0,len(self.v0.state['obs']['targets']))
-        print(action_values)
+        # print(action_values)
         best_action = self.v0.children[best_child_ind].action
 
         self.v0 = self.v0.children[best_child_ind]

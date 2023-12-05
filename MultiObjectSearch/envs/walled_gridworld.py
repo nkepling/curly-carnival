@@ -14,7 +14,7 @@ import yaml
 # NOTE: There maybe some FIXME spread about
 
 
-with open("./MAPS.yaml","r") as f:
+with open("/Users/nathankeplinger/Documents/Vanderbilt/Research/MCTS_LLMs/curly-carnival/MultiObjectSearch/MAPS.yaml","r") as f:
     MAPS = yaml.load(f, Loader=yaml.FullLoader)
 
 
@@ -99,7 +99,7 @@ class WalledGridworld(gym.Env):
     
     """
     
-    def __init__(self,size: int,target_objects: list,map_name,render_mode=False) -> None:
+    def __init__(self,size: int,target_objects: list,map_name,max_steps,seed=None,render_mode=False,) -> None:
 
         """
         int size: side length of square grid
@@ -161,6 +161,11 @@ class WalledGridworld(gym.Env):
         self.objects_collected = 0  #Have all objects been collected?
         # self.visited = [False for _ in target_objects]
         self.render_mode = render_mode
+
+        self.max_steps = max_steps
+
+        if seed:
+            np.random.seed(seed=seed)
 
     def _distribute_targets(self):
         """
@@ -252,6 +257,8 @@ class WalledGridworld(gym.Env):
         cur = (x,y)
         Found = False
 
+        self.num_steps+=1
+
         ###########################
         # Define reward structure #
         ###########################
@@ -260,10 +267,20 @@ class WalledGridworld(gym.Env):
             # reward = 10**self.objects_collected
             reward = 1
             # Found = True
+            # reward =  0
             self.objects_collected+=1 
+            reward = self.objects_collected
             self._target_locations.remove(cur)
         else:
             reward = 0
+
+        # reward = self.objects_collected
+
+
+        # if self.num_steps < self.max_steps:
+        #     reward = self.objects_collected*2
+        # else:
+        #     reward = self.objects_collected 
         
         #######################################################
         # Add a negetive reward for each object not collected #
@@ -277,16 +294,21 @@ class WalledGridworld(gym.Env):
         ##########################
 
         if item_in_cell == "wall": 
+            reward = -1
             terminated = True
         elif len(self._target_locations) == 0:
-            reward = 20
+            # reward = 20
             # reward = 10**self.objects_collected
-            print('Found')
+            # print('Found')
+            reward = self.objects_collected
             terminated = True 
-        elif Found:
+        elif self.num_steps>self.max_steps:
+            reward = self.objects_collected
             terminated = True
         else: 
             terminated = False
+
+
         
 
 
@@ -309,7 +331,8 @@ class WalledGridworld(gym.Env):
         """
         return {
 
-            "distances" : [np.linalg.norm(self._agent_location - t,ord=1) for t in self._target_locations ]
+            "distances" : [np.linalg.norm(self._agent_location - t,ord=1) for t in self._target_locations ],
+            "objects_collected" : self.objects_collected
         }
 
     def _get_obs(self):

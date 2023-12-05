@@ -1,0 +1,63 @@
+import  networkx as nx 
+import numpy as np
+from get_graph import get_graph
+
+
+
+class TSP():
+
+    def __init__(self,desc,size) -> None:
+
+        desc = np.array([list(i) for i in desc])
+        self.G = get_graph(desc,size)
+        # print(list(self.G.nodes))
+        self.actions = []
+
+    def search(self,observation):
+        tsp = nx.approximation.traveling_salesman_problem
+        src = observation["agent"]
+        tgt = list(observation["targets"])
+        nodes = tgt.append(tuple(src))
+        p = tsp(self.G,nodes = nodes,cycle=False)
+
+        return p
+    
+
+
+
+
+if __name__ == "__main__":
+    
+    import matplotlib.pyplot as plt
+    import gymnasium as gym
+    from gymnasium import register
+    import yaml
+    
+    with open("MultiObjectSearch/MAPS.yaml","r") as f:
+        MAPS = yaml.load(f, Loader=yaml.FullLoader)
+
+    map_name = "9x9"
+    size = 9
+    
+    # desc = np.array([list(i) for i in MAPS[map_name]])
+
+    token_finder = TSP(desc = MAPS[map_name],size=size)
+
+    register(
+    id="WalledGridWorld-v0",
+    entry_point="envs.walled_gridworld:WalledGridworld",
+    max_episode_steps=300
+    )
+    env = gym.make("WalledGridWorld-v0",size = size,target_objects = [i for i in range(2)],max_steps = 20,seed = 123,map_name=map_name)
+    state = env.reset()
+    observation, info = state
+
+    p = token_finder.search(observation)
+    print(p)
+
+
+
+
+
+
+
