@@ -6,7 +6,9 @@ import numpy as np
 from render import HumanRenderer
 from gymnasium import register
 from saftey_monitor import Monitor
+from pathlib import Path
 import yaml
+
 
 
 #TODO: Figure out how to have a seed for random components 
@@ -17,7 +19,9 @@ register(
     max_episode_steps=300
 )
 
-with open('./MAPS.yaml','r') as f:
+p = Path(__file__).with_name("MAPS.yaml")
+
+with p.open('r') as f:
      MAPS  = yaml.load(f,Loader=yaml.FullLoader)
 
 map_name= "9x9"
@@ -37,7 +41,7 @@ iter_num = 0
 print(iter_num)
 c = 1.44
 gamma = 1
-m = 10
+m = 1000
 d = 1000
 
 R = HumanRenderer(size = size,desc = MAPS[map_name])

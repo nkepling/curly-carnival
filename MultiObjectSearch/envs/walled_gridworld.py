@@ -3,6 +3,8 @@ import numpy as np
 from gymnasium import spaces
 import networkx as nx
 from dataclasses import dataclass
+from pathlib import Path
+import os
 import yaml
 
 # TODO: Function to randomly spawn agent/Maybe the agent always starts in a corner of a room.... 
@@ -14,9 +16,13 @@ import yaml
 # NOTE: There maybe some FIXME spread about
 
 
-with open("../MultiObjectSearch/MAPS.yaml","r") as f:
-    MAPS = yaml.load(f, Loader=yaml.FullLoader)
 
+# p = Path(__file__).with_name("MAPS.yaml")
+
+p = os.path.join(os.path.dirname(__file__), '../MAPS.yaml')
+
+with open(p,'r') as f:
+     MAPS  = yaml.load(f,Loader=yaml.FullLoader)
 
 @dataclass
 class Item:
