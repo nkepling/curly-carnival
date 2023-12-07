@@ -7,7 +7,7 @@ dependencies:
   - numpy
   - matplotlib
   - networkx
-  - yaml
+  - pyyaml
   - pip
   - pip:
       - gymnasium
