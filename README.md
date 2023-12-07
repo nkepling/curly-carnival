@@ -22,7 +22,6 @@ conda env create --file environment.yml
 **CS 6376 Project**
 
 ```{bash}
-cd curly-carnival
 python MultiObjectSearch/do_search.py
 ```
 
