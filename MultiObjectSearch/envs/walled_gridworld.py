@@ -14,7 +14,7 @@ import yaml
 # NOTE: There maybe some FIXME spread about
 
 
-with open("/Users/nathankeplinger/Documents/Vanderbilt/Research/MCTS_LLMs/curly-carnival/MultiObjectSearch/MAPS.yaml","r") as f:
+with open("../MultiObjectSearch/MAPS.yaml","r") as f:
     MAPS = yaml.load(f, Loader=yaml.FullLoader)
 
 
@@ -183,12 +183,6 @@ class WalledGridworld(gym.Env):
         for loc in self._target_locations: # set rewards in rewards matrix
             self.r[loc[0],loc[1]] = 1
 
-    def _generate_floorplan():
-        """
-        A fucntion that creates a 2d array with the each cell having a class 
-        """
-        pass
-
     def reset(self,seed=None,options=None):
 
         """
@@ -307,10 +301,6 @@ class WalledGridworld(gym.Env):
             terminated = True
         else: 
             terminated = False
-
-
-        
-
 
         observation = self._get_obs()
         info = self._get_info()

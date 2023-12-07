@@ -82,6 +82,8 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 GRAY = (169,169,169)
+AGENT_COLOR=  (4,123,145)
+TARGET_COLOR = (220,78,33)
 
 # # Initialize Pygame
 # pygame.init()
@@ -196,14 +198,14 @@ class HumanRenderer:
 
         TARGET_SIZE = pix_square_size/3
         for t in target_location:
-            pygame.draw.rect(canvas,RED,(t[0]*pix_square_size,t[1]*pix_square_size,pix_square_size,pix_square_size))
+            pygame.draw.rect(canvas,TARGET_COLOR,(t[0]*pix_square_size,t[1]*pix_square_size,pix_square_size,pix_square_size))
 
             # x = (cell_width - rectangle_width) // 2
 
         # # Dray the agent
         pygame.draw.circle(
             canvas,
-            BLUE,
+            AGENT_COLOR,
             (agent_location+0.5) * pix_square_size,
             pix_square_size / 5,
         )
@@ -243,7 +245,7 @@ class HumanRenderer:
         # We need to ensure that human-rendering occurs at the predefined framerate.
         # The following line will automatically add a delay to keep the framerate stable.
         # self.clock.tick(100)
-        # pygame.time.delay(500) 
+        pygame.time.delay(500) 
         # else:  # rgb_array
         #     return np.transpose(
         #         np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
@@ -261,7 +263,7 @@ class HumanRenderer:
 
 if __name__ == "__main__":
     import yaml
-    with open('/Users/nathankeplinger/Documents/Vanderbilt/Research/MCTS_LLMs/curly-carnival/MultiObjectSearch/MAPS.yaml','r') as f:
+    with open('../MAPS.yaml','r') as f:
         MAPS  = yaml.load(f,Loader=yaml.FullLoader)
 
     map_name="9x9"

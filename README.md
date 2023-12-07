@@ -5,7 +5,7 @@ This project simulates and analyzes an autonomous agent performing multi-object 
  - **Stimulation environment**: This project will provide a two dimensional grid world environ- ment that represents a ”top-down” view of a building’s lay out.
  - **Safety and liveliness monitor**: The system will include a safety and liveliness monitor to ensure the behavior of the navigation system.
  - **Online search policy**: We can model the system as a Markov decision process and use an online search policy like Monte Carlo tree search to find target objects in the environment.
- -  **Autonomous agent**: The system includes an autonomous agent that needs to navigate the environment to not only find target object but to avoid collisions with other obstacles in the floor plan.
+
 
 Given these components, I will model this system as a system with synchronous reactive com- ponents. I can define a safety requirement so that the autonomous agent never collides with the walls of the building. Additionally, I will consider liveliness conditions to ensure the agent will keep searching until all objects are found. After exploring the model-based design of this system, I will simulate it with both Python and Julia programs.
 
@@ -17,11 +17,24 @@ Although this idea is not novel, state of the art planning algorithms rely on si
 conda env create --file environment.yml
 ```
 
-## To run mcts:
+## To run the simulator:
+
+**CS 6376 Project**
 
 ```{bash}
-python do_mcts.py
+python do_search.py
 ```
+
+By default the gridword is set to a 9x9 grid with 10 tokens. The maximum number of steps is 16. The distrbution of tokens is randomized.
+
+These parameters can be altered by modifying lines 23-27 in [do_search.py](MultiObjectSearch/do_search.py)
+
+The map descriptions are all specified in [MAPS.yaml](MultiObjectSearch/MAPS.yaml). You can add additional maps by copying the format of the maps included. After creating a custom map be sure to change the map name vairiable found in line 23 of [do_search.py](MultiObjectSearch/do_search.py).
+
+
+
+
+# LLM Config 
 
 ## Llama set up
 

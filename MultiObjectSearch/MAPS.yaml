@@ -50,3 +50,13 @@ maze:
 - W--W-W--W
 - W--W-W--W
 - WWWWWWWWW
+special_case:
+- WWWWWWWWW
+- W----W--W
+- W----W--W
+- W----W--W
+- WW-WWW--W
+- W-------W
+- W-------W
+- W-------W
+- WWWWWWWWW
