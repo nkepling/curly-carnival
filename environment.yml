@@ -1,4 +1,4 @@
-name: curly-carnival
+name: TokenSearch
 channels:
   - conda-forge
   - defaults

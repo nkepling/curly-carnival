@@ -22,7 +22,8 @@ conda env create --file environment.yml
 **CS 6376 Project**
 
 ```{bash}
-python do_search.py
+cd curly-carnival
+python MultiObjectSearch/do_search.py
 ```
 
 By default the gridword is set to a 9x9 grid with 10 tokens. The maximum number of steps is 16. The distrbution of tokens is randomized.
